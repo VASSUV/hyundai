@@ -1,0 +1,35 @@
+syntax="proto3";
+
+message Cars {
+  repeated Car modelsList = 1;
+  repeated Car similarModelsList = 2;
+  repeated Price pricesList = 3;
+}
+
+message Car {
+  uint32 id = 1;
+  uint32 carId = 2;
+  uint32 modificationId = 3;
+  uint32 complectationId = 4;
+  uint32 packageId = 5;
+  uint32 colorExteriorId = 6;
+  uint32 colorInteriorId = 7;
+  uint32 countShow = 8;
+  uint32 price = 9;
+  uint32 year = 10;
+  string ocn = 11;
+  string image = 12;
+  uint32 countAvailable = 13;
+  string modelName = 14;
+  uint32 discountState = 15;
+  uint32 discountStart = 16;
+  uint32 creditAvailable = 17;
+  uint32 cashAvailable = 18;
+  string uuid = 19;
+}
+
+message Price {
+  string id = 1;
+  string maxValue = 2;
+  string minValue = 3;
+}

@@ -1,0 +1,16 @@
+syntax="proto3";
+
+message AllCars {
+  repeated CarPreview carsList = 1;
+}
+
+
+message CarPreview {
+  string name = 1;
+  uint32 id = 2;
+  string link = 3;
+  string img = 4;
+  string modelinfolink = 5;
+  uint32 show = 6;
+  uint32 isSubscribeActive = 7;
+}

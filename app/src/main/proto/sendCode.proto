@@ -1,0 +1,6 @@
+syntax="proto3";
+
+message SendCode {
+  string captcha = 1;
+  string number = 2;
+}
