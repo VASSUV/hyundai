@@ -6,6 +6,7 @@ import retrofit2.http.GET
 
 
 object AppModel {
+    val number = "9176054744"
     val hyundaiGsonApi = Retrofit.Builder()
         .baseUrl("https://showroom.hyundai.ru/")
         .addConverterFactory(GsonConverterFactory.create())

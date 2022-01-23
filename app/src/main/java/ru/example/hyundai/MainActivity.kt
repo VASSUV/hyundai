@@ -2,13 +2,16 @@ package ru.example.hyundai
 
 import android.Manifest
 import android.app.ActivityManager
+import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -34,6 +37,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.compose.NavHost
 import ru.example.hyundai.screens.MainScreen
 import ru.example.hyundai.service.HyundaiService
+import ru.example.hyundai.service.disableSSLCertificateChecking
 import ru.example.hyundai.ui.theme.HyundaiTheme
 import ru.example.hyundai.viewmodels.CarsViewModel
 import ru.example.hyundai.viewmodels.ProfileViewModel
@@ -63,6 +67,9 @@ class MainActivity : ComponentActivity() {
                     "listenCars" -> {
                         carsViewModel.onListenedCars(bundle.getString(actionName) ?: "")
                     }
+                    "captcha" -> {
+                        carsViewModel.onListenedCars(bundle.getString(actionName) ?: "")
+                    }
                 }
             }
         }
@@ -71,7 +78,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-
+        disableSSLCertificateChecking()
         sendStartEventToService()
 
         serviceViewModel.getEventLiveData().observe(this) { event ->
@@ -112,6 +119,17 @@ class MainActivity : ComponentActivity() {
             )
         }
 
+
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (!Settings.canDrawOverlays(this)) {
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
+                ActivityCompat.startActivityForResult(this, intent, 1234, null)
+            }
+        }
+
         setContent {
             HyundaiTheme {
                 // A surface container using the 'background' color from the theme
@@ -141,8 +159,13 @@ class MainActivity : ComponentActivity() {
 
     private fun stopService() {
         if(isServiceRunning()) {
-            val intent = Intent(this, HyundaiService::class.java)
-            stopService(intent)
+            Intent("HyundaiServiceInput").apply {
+                putExtra("action", "stop")
+                LocalBroadcastManager.getInstance(this@MainActivity).sendBroadcast(this)
+            }
+            Intent(this, HyundaiService::class.java).apply {
+                stopService(this)
+            }
         }
     }
 

@@ -4,6 +4,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import ru.example.hyundai.gen.sendCode
 import kotlinx.coroutines.delay
 import org.json.JSONObject
+import ru.example.hyundai.domain.AppModel
 import java.lang.Exception
 import java.net.HttpURLConnection
 import java.net.URL
@@ -80,10 +81,9 @@ class HyundaiAuthHelper(val service: HyundaiService) {
             setRequestProperty("X-Requested-With", "XMLHttpRequest")
             val json = """{
               "code": "$code",
-              "phone": "9176181842",
+              "phone": "${AppModel.number}",
               "front_id": "1632489745801",
-              "utm_object": "{\"utm_medium\":\"referral\",\"utm_source\":\"hyundai.ru\",\"utm_campaign\":\"main_menu\",\"_ga\":\"2.19631099.2107006786.1630044381-2029646611.1629350308\"}",
-              "captcha": "test"
+              "utm_object": "{\"utm_medium\":\"referral\",\"utm_source\":\"hyundai.ru\",\"utm_campaign\":\"main_menu\",\"_ga\":\"2.19631099.2107006786.1630044381-2029646611.1629350308\"}"
             }""".trimIndent()
 
             try {
@@ -112,7 +112,7 @@ class HyundaiAuthHelper(val service: HyundaiService) {
             setRequestProperty("X-Captcha", "test")
             sendCode {
                 captcha = "test"
-                number = "9176181842"
+                number = AppModel.number
             }.writeTo(outputStream)
 //            outputStream.write("\n${0x04.toChar()}test${0x12.toChar()}\n9176181842".toByteArray())
             try {

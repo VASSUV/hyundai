@@ -24,8 +24,6 @@ import android.telecom.TelecomManager
 import androidx.core.app.ActivityCompat
 import android.widget.LinearLayout
 
-import android.webkit.WebView
-
 import android.widget.RelativeLayout
 
 import android.view.Gravity
@@ -33,6 +31,21 @@ import android.view.Gravity
 import android.graphics.PixelFormat
 
 import android.view.WindowManager
+import android.app.Activity
+
+import android.content.Intent
+import android.graphics.drawable.ColorDrawable
+import android.net.Uri
+import android.net.http.SslError
+import android.provider.Settings
+import android.view.LayoutInflater
+import android.view.WindowManager.LayoutParams
+import android.webkit.*
+import android.widget.FrameLayout
+
+import androidx.core.app.ActivityCompat.startActivityForResult
+import androidx.core.content.ContextCompat
+
 
 class HyundaiService: Service() {
     private val channelID = "hyundai listen"
@@ -88,51 +101,92 @@ class HyundaiService: Service() {
                     colorsHelper.sendColors()
                     carsHelper.sendCars()
                 }
+                if(bundle.getString("action") == "stop") {
+                    stopHyundaiListening()
+                }
             }
         }
+    }
+
+    private fun stopHyundaiListening() {
+        TODO("Not yet implemented")
     }
 
     override fun onBind(intent: Intent?): Nothing? = null
 
     override fun onCreate() {
         super.onCreate()
-
+        disableSSLCertificateChecking()
         val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+            LayoutParams.TYPE_APPLICATION_OVERLAY;
         else
-            WindowManager.LayoutParams.TYPE_PHONE
+            LayoutParams.TYPE_PHONE
 
-        val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT,
+        val params = LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.WRAP_CONTENT,
             type,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            LayoutParams.FLAG_SPLIT_TOUCH or LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         )
-        params.gravity = Gravity.TOP or Gravity.LEFT
-        params.x = 0
-        params.y = 0
-        params.width = 0
-        params.height = 0
+        params.gravity = Gravity.TOP or Gravity.START
+        params.x = 100
+        params.y = 100
+        params.height = 1200
+        params.width = 600
 
-        val view = LinearLayout(this)
+        val view = FrameLayout(this)
+        view.background = ColorDrawable(ContextCompat.getColor(this, R.color.teal_200))
         view.layoutParams =
             RelativeLayout.LayoutParams(
                 RelativeLayout.LayoutParams.MATCH_PARENT,
                 RelativeLayout.LayoutParams.MATCH_PARENT
             )
-
         webView = WebView(this)
+        webView?.setInitialScale(90)
+        webView?.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): Boolean {
+                println("Override -----" + request?.url?.toString())
+                return super.shouldOverrideUrlLoading(view, request)
+            }
+
+            override fun shouldInterceptRequest(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): WebResourceResponse? {
+                println("Intercept -----" + request?.url?.toString())
+                return super.shouldInterceptRequest(view, request)
+            }
+
+            override fun onReceivedSslError(
+                view: WebView?,
+                handler: SslErrorHandler?,
+                error: SslError?
+            ) {
+                handler?.proceed()
+//                super.onReceivedSslError(view, handler, error)
+            }
+        }
+        webView?.webChromeClient = object : WebChromeClient() {
+
+        }
+        webView?.settings?.javaScriptEnabled = true
+        webView?.settings?.javaScriptCanOpenWindowsAutomatically = true
         webView?.layoutParams =
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT
             )
         view.addView(webView)
-        webView?.loadUrl("/blank")
-
+        val lp = webView?.layoutParams as FrameLayout.LayoutParams
+        lp.setMargins(10, 10, 10, 10)
+        webView?.layoutParams = lp
+        webView?.loadUrl("https://showroom.hyundai.ru/auth")
         windowManager.addView(view, params)
 
         Shared.preferences = getSharedPreferences("HyundaiPreferences", MODE_PRIVATE)
@@ -159,8 +213,10 @@ class HyundaiService: Service() {
         job?.cancel()
         var authDeferred: Deferred<Unit>? = null
 //        copyAsmbleHelper.run(this)
-        job = GlobalScope.launch {
-            while(true) {
+     /*   job = GlobalScope.launch {
+            var counter = 1;
+            while(counter != 0) {
+                counter--
                 delay(2000)
                 val (isStartSession, isAuthAgain, isPreAuth) = authHelper.startSession()
                 loadHelper.loadNext()
@@ -183,7 +239,7 @@ class HyundaiService: Service() {
                     }
                 }
             }
-        }
+        }*/
         return START_NOT_STICKY
     }
 
